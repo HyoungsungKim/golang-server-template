@@ -1,0 +1,52 @@
+version: "3.7"
+
+services:
+  go:
+    image: golang:alpine
+    depends_on:
+      - postgres
+    networks:
+      - db_network
+    ports:
+      - 8090:8090
+    environment:
+      DB_PORT: 5432
+      DB_ADDRES: 172.30.0.1
+    working_dir: /app
+    volumes:
+      - ./:/app
+    stdin_open: true
+    tty: true
+
+  postgres:
+    image: postgres:alpine
+    networks:
+      db_network:
+        ipv4_address: 172.30.0.1
+    ports:
+      - 5432:5432
+    env_file:
+      - .postgres_env
+    volumes:
+      - ./db:/app/db
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    networks:
+      - db_network
+    ports:
+      - 5433:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@dev.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - ./pgadmin:/app/pgadmin
+
+networks:
+  db_network:
+    ipam:
+      config:
+        - gateway: 172.30.1.1
+          subnet: 172.30.0.0/16
